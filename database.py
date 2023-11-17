@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, String, MetaData, Table
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "sqlite:///./test.db"  # SQLite database URL
+DATABASE_URL = "sqlite:///./fileinfo.db"  # SQLite database URL
 engine = create_engine(DATABASE_URL)
 metadata = MetaData()
 

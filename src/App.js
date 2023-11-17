@@ -44,7 +44,6 @@ function App() {
       }
   
       const result = await res.json();
-      console.log('Server response:', result);
       setResponse(result);
     } catch (error) {
       console.error('Error storing data:', error);

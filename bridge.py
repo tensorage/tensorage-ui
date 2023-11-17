@@ -42,7 +42,7 @@ from pathlib import Path
 import storage
 
 LIMIT_LOOP_COUNT = 3 # Maximum loop_count for every loop
-CHUNK_STORE_COUNT = 1 # Number of chunks to store
+CHUNK_STORE_COUNT = 3 # Number of chunks to store
 CHUNK_SIZE = 1 << 22    # 1 MB
 MIN_N_CHUNKS = 1 << 8  # the minimum number of chunks a miner should provide at least is 1GB (CHUNK_SIZE * MIN_N_CHUNKS)
 TB_NAME = "saved_data"
@@ -56,7 +56,7 @@ def create_database_for_file(db_name):
     conn = sqlite3.connect(f"{db_base_path}/{db_name}.db")
     cursor = conn.cursor()
     
-    cursor.execute(f"CREATE TABLE IF NOT EXISTS {TB_NAME} (chunk_id INTEGER PRIMARY KEY, miner_hotkey TEXT, miner_key INTEGER)")
+    cursor.execute(f"CREATE TABLE IF NOT EXISTS {TB_NAME} (id INTEGER PRIMARY KEY, chunk_id INTEGER, miner_hotkey TEXT, miner_key INTEGER)")
     conn.close()
 
 # Save the chunk(index : chunk_number) to db_name
@@ -152,13 +152,13 @@ def main( config ):
 
     @app.post("/store/")
     async def store( file: UploadFile = File(...) ):
+        bt.logging.info(f"Storing...")
         # Find all active nodes
         ping_response = await dendrite.forward(
             metagraph.axons,
             storage.protocol.Ping(),
             deserialize=True,
         )
-        
         active_axons = [axon for i, axon in enumerate(metagraph.axons) if ping_response[i] == "OK"]
 
         db_name = generate_random_hash_str()
@@ -179,7 +179,7 @@ def main( config ):
                 loop_count = loop_count + 1
                 #Generate list of miners who will receive chunk, count: CHUNK_STORE_COUNT
                 store_count = min(CHUNK_STORE_COUNT * 2, axon_count - len(index_list))
-                for i in range(axon_count):
+                for i in range(store_count):
                     while True:
                         chunk_i = random.randint(0, axon_count - 1)
                         if chunk_i in index_list:
@@ -227,7 +227,7 @@ def main( config ):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        cursor.execute(f"SELECT * FROM {TB_NAME}")
+        cursor.execute(f"SELECT chunk_id FROM {TB_NAME}")
         rows = cursor.fetchall()
 
         chunk_size = max(rows, key=lambda obj: obj[0])[0] + 1
@@ -242,7 +242,7 @@ def main( config ):
 
         with open(file_path, 'wb') as output_file:
             for id in range(chunk_size):
-                cursor.execute(f"SELECT * FROM {TB_NAME} where chunk_id = {id}")
+                cursor.execute(f"SELECT chunk_id, miner_hotkey, miner_key FROM {TB_NAME} where chunk_id = {id}")
                 rows = cursor.fetchall()
                 hotkey_list = [row[1] for row in rows]
                 key_list = {row[1]:row[2] for row in rows}
