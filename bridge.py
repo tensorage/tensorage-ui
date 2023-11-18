@@ -44,7 +44,7 @@ import storage
 LIMIT_LOOP_COUNT = 3 # Maximum loop_count for every loop
 CHUNK_STORE_COUNT = 3 # Number of chunks to store
 CHUNK_SIZE = 1 << 22    # 1 MB
-MIN_N_CHUNKS = 1 << 8  # the minimum number of chunks a miner should provide at least is 1GB (CHUNK_SIZE * MIN_N_CHUNKS)
+DEFAULT_N_CHUNKS = 1 << 8  # the minimum number of chunks a miner should provide at least is 1GB (CHUNK_SIZE * DEFAULT_N_CHUNKS)
 TB_NAME = "saved_data"
 
 # Create a database to store the given file
@@ -80,6 +80,17 @@ def update_miner_hash(validator_hotkey, store_resp_list):
         cursor.execute(update_request, (store_resp['hash'], store_resp['key']))
         conn.commit()
         conn.close()
+
+# Get the n_chunks of given miner
+def get_n_chunks(miner_hotkey, validator_hotkey):
+    db_path = f"{config.db_root_path}/{config.wallet.name}/{config.wallet.hotkey}/DB-{miner_hotkey}-{validator_hotkey}"
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    get_count_request = f"SELECT COUNT(*) FROM DB{miner_hotkey}{validator_hotkey}"
+    cursor.execute(get_count_request)
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count
 
 # Hash the given data
 def hash_data(data):
@@ -154,12 +165,16 @@ def main( config ):
     async def store( file: UploadFile = File(...) ):
         bt.logging.info(f"Storing...")
         # Find all active nodes
+        valid_axons = [axon for axon in metagraph.axons if get_n_chunks(axon.hotkey, wallet.hotkey.ss58_address) > DEFAULT_N_CHUNKS]
+        bt.logging.info(f"{valid_axons}")
         ping_response = await dendrite.forward(
-            metagraph.axons,
+            valid_axons,
             storage.protocol.Ping(),
             deserialize=True,
         )
-        active_axons = [axon for i, axon in enumerate(metagraph.axons) if ping_response[i] == "OK"]
+        active_axons = [axon for i, axon in enumerate(valid_axons) if ping_response[i] == "OK"]
+
+        bt.logging.info(f"{active_axons}")
 
         db_name = generate_random_hash_str()
         create_database_for_file(db_name)
@@ -171,25 +186,29 @@ def main( config ):
             hex_representation = ''.join([f'\\x{byte:02x}' for byte in chunk])
 
             # Construct the desired string
-            chunk = f"b'{hex_representation}'"
             store_resp_list = []
+            chunk = f"b'{hex_representation}'"
             index_list = []
             loop_count = 0
             while len(store_resp_list) < CHUNK_STORE_COUNT and loop_count < LIMIT_LOOP_COUNT:
                 loop_count = loop_count + 1
                 #Generate list of miners who will receive chunk, count: CHUNK_STORE_COUNT
-                store_count = min(CHUNK_STORE_COUNT * 2, axon_count - len(index_list))
+                store_count = min(CHUNK_STORE_COUNT, axon_count - len(index_list))
+                new_index_list = []
                 for i in range(store_count):
                     while True:
                         chunk_i = random.randint(0, axon_count - 1)
                         if chunk_i in index_list:
                             continue
+                        new_index_list.append(chunk_i)
                         index_list.append(chunk_i)
                         break
                 
+                if not new_index_list:
+                    break
                 #Transfer the chunk to selected miners
                 axons_list = []
-                for index in index_list:
+                for index in new_index_list:
                     axons_list.append(active_axons[index])
 
                 store_response = await dendrite.forward(
