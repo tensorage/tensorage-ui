@@ -166,15 +166,13 @@ def main( config ):
         bt.logging.info(f"Storing...")
         # Find all active nodes
         valid_axons = [axon for axon in metagraph.axons if get_n_chunks(axon.hotkey, wallet.hotkey.ss58_address) > DEFAULT_N_CHUNKS]
-        bt.logging.info(f"{valid_axons}")
+
         ping_response = await dendrite.forward(
             valid_axons,
             storage.protocol.Ping(),
             deserialize=True,
         )
         active_axons = [axon for i, axon in enumerate(valid_axons) if ping_response[i] == "OK"]
-
-        bt.logging.info(f"{active_axons}")
 
         db_name = generate_random_hash_str()
         create_database_for_file(db_name)
