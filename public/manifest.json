@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "tensorage",
+  "name": "Frontend for tensorage running on validators",
   "icons": [
     {
       "src": "favicon.ico",
