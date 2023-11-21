@@ -18,7 +18,7 @@ function App() {
       const formData = new FormData();
       formData.append('file', selectedFile);
   
-      const res = await fetch('http://localhost:8000/store/', {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/store/`, {
         method: 'POST',
         body: formData,
       });
@@ -45,7 +45,7 @@ function App() {
         return;
       }
       setRetrieving(true)
-      await fetch(`http://localhost:8000/retrieve/?hash=${hash}`)
+      await fetch(`${process.env.REACT_APP_BACKEND_URL}/retrieve/?hash=${hash}`)
       .then(response => {
         if (!response.ok) {
           console.error('Error response from server:', response);
