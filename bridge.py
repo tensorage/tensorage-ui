@@ -47,7 +47,6 @@ DEFAULT_N_CHUNKS = (
 )  # the minimum number of chunks a miner should provide at least is 1GB (CHUNK_SIZE * DEFAULT_N_CHUNKS)
 TB_NAME = "saved_data"
 
-
 # Create a database to store the given file
 def create_database_for_file(db_name):
     db_base_path = (
@@ -145,10 +144,6 @@ def get_config():
     config = bt.config(parser)
     return config
 
-
-app = FastAPI()
-
-
 def main(config):
     # The wallet holds the cryptographic key pairs for the validator.
     wallet = bt.wallet(config=config)
@@ -166,6 +161,7 @@ def main(config):
     metagraph = subtensor.metagraph(config.netuid)
     bt.logging.info(f"Metagraph: {metagraph}")
 
+    
     app = FastAPI()
 
     origins = [
@@ -178,6 +174,7 @@ def main(config):
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Content-Disposition"]  # Exposes Content-Disposition header
     )
 
     @app.post("/store/")
