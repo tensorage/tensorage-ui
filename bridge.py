@@ -28,6 +28,7 @@ import argparse
 import hashlib
 import sqlite3
 import secrets
+import shutil
 import bittensor as bt
 import database
 from fastapi import FastAPI, HTTPException
@@ -180,6 +181,8 @@ def main(config):
     @app.post("/store/")
     async def store(file: UploadFile = File(...)):
         bt.logging.info(f"Storing...")
+        if os.path.exists("./files/"):
+            shutil.rmtree("./files/")
         # Find all active nodes
         valid_axons = [
             axon
@@ -288,7 +291,8 @@ def main(config):
         for axon in metagraph.axons:
             hotkey_axon_dict[axon.hotkey] = axon
 
-        file_path = str(time.time())
+        file_path = "./files/" + hash + str(time.time())
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
         validator_hotkey = wallet.hotkey.ss58_address
 
