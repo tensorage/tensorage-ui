@@ -53,32 +53,35 @@ function App() {
 
   const handleRetrieve = async () => {
     try {
+      let filename = 'downloaded-file';
       if (!hash) {
         console.error('No hash provided');
         return;
       }
       setRetrieving(true)
-      const response = await fetch(`http://localhost:8000/retrieve/?hash=${hash}`);
-      if (!response.ok) {
-        console.error('Error response from server:', response);
-        return;
-      }
-      setRetrieving(false)
-      // Extract filename from Content-Disposition header
-      const contentDisposition = response.headers.get('Content-Disposition');
-      const filenameMatch = contentDisposition && contentDisposition.match(/filename="(.+)"/);
-      const filename = filenameMatch ? filenameMatch[1] : 'downloaded-file';
-
-      // Convert the response to a blob
-      const blob = await response.blob();
-
-      // Create a download link and trigger the download
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      await fetch(`http://localhost:8000/retrieve/?hash=${hash}`)
+      .then(response => {
+        if (!response.ok) {
+          console.error('Error response from server:', response);
+          return;
+        }
+        setRetrieving(false)
+        // Extract filename from Content-Disposition header
+        // Inspect the headers in the response
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const filenameMatch = contentDisposition && contentDisposition.match(/filename="(.+)"/);
+        filename = filenameMatch ? filenameMatch[1] : 'downloaded-file';
+        return response.blob();
+      })
+      .then(blob => {
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a); // append the element to the dom
+        a.click();
+        a.remove(); // afterwards, remove the element  
+      })
     } catch (error) {
       console.error('Error retrieving data:', error);
     }
