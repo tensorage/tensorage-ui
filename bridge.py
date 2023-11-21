@@ -95,18 +95,19 @@ def update_miner_hash(validator_hotkey, store_resp_list):
         conn.commit()
         conn.close()
 
-
 # Get the n_chunks of given miner
 def get_n_chunks(miner_hotkey, validator_hotkey):
-    db_path = f"{config.db_root_path}/{config.wallet.name}/{config.wallet.hotkey}/DB-{miner_hotkey}-{validator_hotkey}"
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    get_count_request = f"SELECT COUNT(*) FROM DB{miner_hotkey}{validator_hotkey}"
-    cursor.execute(get_count_request)
-    count = cursor.fetchone()[0]
-    conn.close()
-    return count
-
+    try:
+        db_path = f"{config.db_root_path}/{config.wallet.name}/{config.wallet.hotkey}/DB-{miner_hotkey}-{validator_hotkey}"
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        get_count_request = f"SELECT COUNT(*) FROM DB{miner_hotkey}{validator_hotkey}"
+        cursor.execute(get_count_request)
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count
+    except Exception as e:
+        return 0
 
 # Hash the given data
 def hash_data(data):

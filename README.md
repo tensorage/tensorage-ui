@@ -24,6 +24,7 @@ npm install -g pm2
 3. Install Python 3 and pip.
 ```bash
 sudo apt install python3 python3-pip
+python -m pip install -r requirements.txt
 ```
 
 4. Clone this repository to your machine and install required modules.
@@ -33,12 +34,21 @@ cd tensorage-ui
 npm install
 ```
 
-5. Run backend code using PM2
+5. Set Environment variables
+```bash
+cp .env.example .env
+```
+Edit .env file and set the following variables:
+```bash
+REACT_APP_BACKEND_URL=http://<your-ip>:8000
+```
+
+6. Run backend code using PM2
 ```bash
 pm2 start bridge.py --interpreter python3 --name ui-bridge -- --wallet.name <validator-coldkey> --wallet.hotkey <validator-hotkey> --netuid 7 --subtensor.network finney
 ```
 
-6. Run Web UI using PM2
+7. Run Web UI using PM2
 ```bash
 pm2 start npm --name ui -- start
 ```
