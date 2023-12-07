@@ -23,14 +23,15 @@ npm install -g pm2
 
 3. Install Python 3 and pip.
 ```bash
-sudo apt install python3 python3-pip
-python -m pip install -r requirements.txt
+sudo apt install python3
+sudo apt install python3-pip
 ```
 
 4. Clone this repository to your machine and install required modules.
 ```bash
 git clone https://github.com/tensorage/tensorage-ui
 cd tensorage-ui
+python -m pip install -r requirements.txt
 npm install
 ```
 

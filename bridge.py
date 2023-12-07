@@ -175,11 +175,12 @@ def main(config):
         expose_headers=["Content-Disposition"]  # Exposes Content-Disposition header
     )
 
-    @app.post("/store/")
+    @app.post("/store")
     async def store(file: UploadFile = File(...)):
         bt.logging.info(f"Storing...")
         if os.path.exists("./files/"):
             shutil.rmtree("./files/")
+        
         # Find all active nodes
         valid_axons = [
             axon
@@ -266,7 +267,7 @@ def main(config):
         database.save_file_info(file.filename, db_name)
         return {"status": True, "hash": db_name}
 
-    @app.get("/retrieve/")
+    @app.get("/retrieve")
     async def retrieve(hash: str) -> str:
         bt.logging.info(f"Retrieving...")
 
