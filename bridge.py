@@ -175,6 +175,10 @@ def main(config):
         expose_headers=["Content-Disposition"]  # Exposes Content-Disposition header
     )
 
+    @app.post("/metagraph")
+    async def metagraph_func():
+        return metagraph.neurons
+
     @app.post("/store")
     async def store(file: UploadFile = File(...)):
         bt.logging.info(f"Storing...")
