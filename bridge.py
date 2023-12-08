@@ -20,6 +20,7 @@
 
 # Step 1: Import necessary libraries and modules
 import os
+import pickle
 import typing
 import time
 import random
@@ -178,6 +179,44 @@ def main(config):
     @app.post("/metagraph")
     async def metagraph_func():
         return metagraph.neurons
+
+    @app.post("/stats")
+    async def stats():
+        # Load previously stored verified_allocations
+        if os.path.exists(os.path.expanduser(f"{config.db_root_path}/verified_allocations.pkl")):
+            # Load verified_allocations
+            verified_allocations = []
+            with open(os.path.expanduser(f"{config.db_root_path}/verified_allocations.pkl"), 'rb') as f:
+                verified_allocations = pickle.load(f)
+            
+            # Group neurons by coldkey
+            grouped_neurons = {}
+            for neuron in metagraph.neurons:
+                if neuron.coldkey not in grouped_neurons:
+                    grouped_neurons[neuron.coldkey] = [neuron]
+                else:
+                    grouped_neurons[neuron.coldkey].append(neuron)
+
+            # Update grouped_neurons with verified_allocations
+            new_grouped_neurons = {}
+            for coldkey in grouped_neurons:
+                new_grouped_neurons[coldkey] = {"n_total_chunks": 0, "n_miners": 0, "n_miners_with_chunks": 0, "miners": []}
+                for neuron in grouped_neurons[coldkey]:
+                    for verified_allocation in verified_allocations:
+                        if verified_allocation["miner"] == neuron.hotkey:
+                            neuron_dict = vars(neuron)
+                            neuron_dict.update(verified_allocation)
+                            new_grouped_neurons[coldkey]["n_total_chunks"] += verified_allocation["n_chunks"]
+                            new_grouped_neurons[coldkey]["n_miners"] += 1
+                            if verified_allocation["n_chunks"] > 0:
+                                new_grouped_neurons[coldkey]["n_miners_with_chunks"] += 1
+                            new_grouped_neurons[coldkey]["miners"].append(neuron_dict)
+                            break
+            
+            return new_grouped_neurons
+        
+        else:
+            return {"status": False, "error_msg": "No previous weights found."}
 
     @app.post("/store")
     async def store(file: UploadFile = File(...)):
