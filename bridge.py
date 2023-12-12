@@ -176,11 +176,11 @@ def main(config):
         expose_headers=["Content-Disposition"]  # Exposes Content-Disposition header
     )
 
-    @app.post("/metagraph")
+    @app.get("/metagraph")
     async def metagraph_func():
         return metagraph.neurons
 
-    @app.post("/stats")
+    @app.get("/stats")
     async def stats():
         # Load previously stored verified_allocations
         if os.path.exists(os.path.expanduser(f"{config.db_root_path}/verified_allocations.pkl")):
@@ -403,6 +403,51 @@ def main(config):
             raise HTTPException(
                 status_code=500, detail=f"Error retrieving file: {str(e)}"
             )
+    
+    @app.get("/sharding_info")
+    async def sharding_info(hash: str):
+        bt.logging.info(f"Retrieving file information...")
+
+        db_name = hash
+        db_path = f"{config.db_root_path}/{config.wallet.name}/{config.wallet.hotkey}/data/{db_name}.db"
+
+        if not os.path.exists(db_path):
+            raise HTTPException(status_code=404, detail="Invalid hash value")
+
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute(f"SELECT chunk_id FROM {TB_NAME}")
+        rows = cursor.fetchall()
+
+        n_chunks = max(rows, key=lambda obj: obj[0])[0] + 1
+
+        hotkey_axon_dict = {}
+        for axon in metagraph.axons:
+            hotkey_axon_dict[axon.hotkey] = axon
+
+        file_path = "./files/" + hash + str(time.time())
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        chunks = []
+
+        for id in range(n_chunks):
+            cursor.execute(
+                f"SELECT chunk_id, miner_hotkey, miner_key FROM {TB_NAME} where chunk_id = {id}"
+            )
+            rows = cursor.fetchall()
+            hotkey_list = [row[1] for row in rows]
+            key_list = {row[1]: row[2] for row in rows}
+
+            axons_list = [{**vars(hotkey_axon_dict[hotkey]), "key": key_list[hotkey]} for i, hotkey in enumerate(hotkey_list)]
+            
+            chunks.append(axons_list)
+
+        conn.close()
+        
+        filename = database.get_filename_for_hash(hash)
+
+        return {"filename": filename, "n_chunks": n_chunks, "chunks": chunks}
 
     # Run backend.
     uvicorn.run(app, host="0.0.0.0", port=8000)
