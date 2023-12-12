@@ -180,6 +180,36 @@ def main(config):
     async def metagraph_func():
         return metagraph.neurons
 
+    @app.get("/overview")
+    async def net_overview():
+        # 1. Get number of files stored in the database
+        n_files = database.get_number_of_files()
+
+        # 2. Get chunks details from the database (how many in total are being served for this validator)
+        n_total_chunks = 0
+        # Load previously stored verified_allocations
+        if os.path.exists(os.path.expanduser(f"{config.db_root_path}/verified_allocations.pkl")):
+            # Load verified_allocations
+            verified_allocations = []
+            with open(os.path.expanduser(f"{config.db_root_path}/verified_allocations.pkl"), 'rb') as f:
+                verified_allocations = pickle.load(f)
+            for verified_allocation in verified_allocations:
+                n_total_chunks += int(verified_allocation["n_chunks"])
+
+        # 3. Get chunks details from the database (how many chunks are currently being used)
+        n_used_chunks = 0
+        # Iterate all DB files in "{config.db_root_path}/{config.wallet.name}/{config.wallet.hotkey}/data/*.db"
+        for db_file in os.listdir(f"{config.db_root_path}/{config.wallet.name}/{config.wallet.hotkey}/data"):
+            if db_file.endswith(".db"):
+                conn = sqlite3.connect(f"{config.db_root_path}/{config.wallet.name}/{config.wallet.hotkey}/data/{db_file}")
+                cursor = conn.cursor()
+                cursor.execute(f"SELECT COUNT(*) FROM {TB_NAME}")
+                count = cursor.fetchone()[0]
+                n_used_chunks += count
+                conn.close()
+        
+        return {"n_files": n_files, "n_total_chunks": n_total_chunks, "n_used_chunks": n_used_chunks}
+
     @app.get("/stats")
     async def stats():
         # Load previously stored verified_allocations
@@ -440,7 +470,7 @@ def main(config):
             key_list = {row[1]: row[2] for row in rows}
 
             axons_list = [{**vars(hotkey_axon_dict[hotkey]), "key": key_list[hotkey]} for i, hotkey in enumerate(hotkey_list)]
-            
+
             chunks.append(axons_list)
 
         conn.close()
