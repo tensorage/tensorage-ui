@@ -37,3 +37,9 @@ def get_filename_for_hash(hash: str):
     db_file_info = db.query(FileInfo).filter(FileInfo.hash == hash).first()
     db.close()
     return db_file_info.filename if db_file_info else None
+
+def get_number_of_files():
+    db = SessionLocal()
+    db_file_info = db.query(FileInfo).count()
+    db.close()
+    return db_file_info
