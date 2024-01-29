@@ -1,0 +1,153 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Saira:wght@700&display=swap'); */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @import url('https://fonts.googleapis.com/css2?family=Open+Sans&family=Saira&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+
+
+html {
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+}
+
+/*
+  Custom base CSS
+*/
+.rs-btn-primary {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.rs-table-cell-content {
+  color: #a8a8a8;
+  font-size: 12px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.rs-picker-select-menu-item {
+  font-size: 14px;
+}
+
+.rs-table-cell-header .rs-table-cell-content {
+  padding-left: 2px;
+  padding-right: 2px;
+  font-size: 12px;
+}
+
+.rs-sidenav-default,
+.rs-sidenav-default .rs-dropdown-toggle,
+.rs-sidenav-default .rs-sidenav-item,
+.rs-sidenav-default .rs-sidenav-toggle-button,
+.rs-panel {
+  background-color: #1a1d24;
+}
+
+.rs-table-hover .rs-table-row:hover .rs-table-cell,
+.rs-table-hover .rs-table-row:hover .rs-table-cell-group,
+.rs-table-row-expanded,
+.rs-table-row-header,
+.rs-table-row-header .rs-table-cell {
+  background-color: #1a1d24;
+}
+
+.rs-input {
+  background-color: #1a1d24;
+}
+
+/*
+  Custom CSS
+*/
+.green-cell > .rs-table-cell-content {
+  color: #14dec2 !important;
+  font-weight: bold !important;
+}
+
+.white-cell > .rs-table-cell-content {
+  color: #fff !important;
+}
+
+.organe-cell > .rs-table-cell-content {
+  color: #ff9900 !important;
+}
+
+.stats-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  color: #333;
+  font-weight: 700;
+}
+
+.stat-item {
+  text-align: center;
+  margin: 0 10px;
+}
+
+.stat-value {
+  color: #fff;
+  font-size: 20px;
+  margin: 0;
+}
+
+.stat-label {
+  color: #fff;
+  font-size: 14px;
+  margin: 0;
+}
+
+.chart-img {
+  width: 64px;
+}
+.trend-box {
+  .rs-panel-body {
+    text-align: right;
+    .value {
+      font-size: 36px;
+    }
+  }
+}
+
+/* Tooltip pie chart css */
+.arrow_box {
+  position: relative;
+  margin: 10px 10px 10px 10px;
+  display: flex;
+  align-items: center;
+}
+
+.arrow_box:after,
+.arrow_box:before {
+  right: 100%;
+  top: 50%;
+  border: solid transparent;
+  content: ' ';
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.arrow_box:after {
+  border-color: rgba(85, 85, 85, 0);
+  margin-top: -13px;
+}
+
+.circle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.shardInfo {
+  color: #a8a8a8;
+}
+
+
+.shardInfoValue {
+  color: #fff;
+}
